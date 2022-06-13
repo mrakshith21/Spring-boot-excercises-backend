@@ -2,8 +2,10 @@ package com.excercises.excercisesbackend.controller;
 
 import com.excercises.excercisesbackend.models.Text;
 import com.excercises.excercisesbackend.models.WordCount;
+import com.excercises.excercisesbackend.models.ZodiacSign;
 import com.excercises.excercisesbackend.service.Service;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
@@ -24,7 +26,8 @@ public class Controller {
 
     int counter1 = 0, counter2;
 
-    Service service = new Service();
+    @Autowired
+    private Service service;
 
     // 1
     @GetMapping("/welcome")
@@ -121,10 +124,11 @@ public class Controller {
     public ResponseEntity<byte[]> getMonumentImage(@RequestParam("name") String name) throws IOException {
 
         var imgFile = new File("src/main/resources/static/images/monuments/" + name + ".jpg");
+
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .body(Files.readAllBytes(imgFile.toPath()));
+                .body(Base64.getEncoder().encode(Files.readAllBytes(imgFile.toPath())));
     }
 
     // 11
@@ -184,12 +188,26 @@ public class Controller {
 
     // 17 - zodiac sign
     @GetMapping(value = "/zodiacSign")
-    public String zodiacSign(@RequestParam("date") String day, @RequestParam("month") String month){
+    public String zodiacSign(@RequestParam("date") String day, @RequestParam("month") String month) throws Exception {
         int d = Integer.parseInt(day);
         int m = Integer.parseInt(month);
-        return service.zodiacSign(d, m);
+        String zodiac = service.zodiacSign(d, m);
+        if(zodiac.equals("None")){
+            throw new Exception();
+        }
+        return zodiac;
     }
 
+    @CrossOrigin()
+    @GetMapping(value = "/zodiacSignImage", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> zodiacSign(@RequestParam("zodiac") String zodiac) throws IOException {
+        var imgFile = new File("src/main/resources/static/images/zodiac_signs/" + zodiac.toLowerCase() + ".jpg");
+
+        return ResponseEntity
+                .ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(Base64.getEncoder().encode(Files.readAllBytes(imgFile.toPath())));
+    }
 
     // 18
     @GetMapping(value = "/itemsDisplay")
@@ -215,7 +233,7 @@ public class Controller {
         return ResponseEntity
                 .ok()
                 .contentType(MediaType.IMAGE_JPEG)
-                .body(Files.readAllBytes(imgFile.toPath()));
+                .body(Base64.getEncoder().encode(Files.readAllBytes(imgFile.toPath())));
     }
 
 
